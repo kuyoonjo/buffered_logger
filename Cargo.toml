@@ -1,0 +1,17 @@
+[package]
+name = "buffered_logger"
+version = "1.0.0"
+edition = "2021"
+authors = ["Yu Chen <yu.chen@live.ie>"]
+description = "a file logger implemetation for crate [log](https://docs.rs/log/latest/log/)."
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.19"
+crossbeam-channel = "0.5.1"
+flate2 = "1.0.22"
+log = { version = "0.4.14", features = ["std"] }
+permissions = "0.3.0"
+regex = "1.5.4"
