@@ -38,7 +38,6 @@ use std::{
 use crossbeam_channel::{unbounded, Receiver, Sender};
 use flate2::{write::GzEncoder, Compression};
 use log::{Level, Metadata, Record, SetLoggerError};
-use permissions::{is_readable, is_writable};
 use regex::Regex;
 
 #[cfg(windows)]
@@ -139,44 +138,6 @@ impl Logger {
                     exit(-1);
                 }
                 _ => (),
-            }
-            match is_readable(&log_dir) {
-                Ok(readable) => {
-                    if !readable {
-                        eprintln!(
-                            "buffered_logger: Dir {} is not readable.",
-                            log_dir.to_str().unwrap()
-                        );
-                        exit(-1);
-                    }
-                }
-                Err(err) => {
-                    eprintln!(
-                        "buffered_logger: Dir {} is not readable - {}",
-                        log_dir.to_str().unwrap(),
-                        err
-                    );
-                    exit(-1);
-                }
-            }
-            match is_writable(&log_dir) {
-                Ok(writable) => {
-                    if !writable {
-                        eprintln!(
-                            "buffered_logger: Dir {} is not writable.",
-                            log_dir.to_str().unwrap()
-                        );
-                        exit(-1);
-                    }
-                }
-                Err(err) => {
-                    eprintln!(
-                        "buffered_logger: Dir {} is not writable - {}",
-                        log_dir.to_str().unwrap(),
-                        err
-                    );
-                    exit(-1);
-                }
             }
 
             let mut file = OpenOptions::new()
