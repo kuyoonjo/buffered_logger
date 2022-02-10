@@ -1,29 +1,29 @@
 //! # buffered_logger
-//! 
+//!
 //! This is a file logger implemetation for crate [log](https://docs.rs/log/latest/log/). It provides a buffer to save
 //! the log contents temporarily indeed of writing file every time. When the size of buffer exceeds the max buffer
-//! size, it writes the buffer to current log file. When the size of the current log file exceeds the max file size, 
+//! size, it writes the buffer to current log file. When the size of the current log file exceeds the max file size,
 //! the log file is rotated. It uses crate [flate2](https://docs.rs/flate2/latest/flate2/) to compress rotatd file.
 //! It uses crate [crossbeam-channel](https://docs.rs/crossbeam-channel/0.5.1/crossbeam_channel/) for multi-threading.
-//! 
+//!
 //! # Usage
 //! ```rust
 //! use buffered_logger::Logger;
-//! 
+//!
 //! // Initialize the logger and start the service.
 //! let logger = Logger::init(log::Level::Trace, "logs/m.log".to_string(), 10, 1024, 1024 * 5, true).unwrap();
 //! logger.start();
-//! 
+//!
 //! // Now you can start logging.
 //! log::info!("this is an info message");
 //! log::debug!("this is a debug message");
-//! 
+//!
 //! // Logger is clonable. This is useful for passing it to a different thread.
 //! let logger_clone = logger.clone();
-//! 
+//!
 //! // You can manually write the buffer to current log file. eg. run it every second.
 //! logger_clone.flush();
-//! 
+//!
 //! // You can manually rotate the log file. eg. run it every day at 00:00.
 //! logger_clone.rotate();
 //! ```
@@ -67,6 +67,8 @@ struct Log {
     level: Level,
     sender: Sender<Message>,
 }
+
+static mut TIME_DIFF: i64 = 0;
 
 impl Logger {
     /// Initialize a logger
@@ -253,6 +255,13 @@ impl Logger {
     pub fn rotate(&self) {
         self.sender.send(Message::Rotate).unwrap();
     }
+
+    /// set time_diff in secs.
+    pub fn set_time_diff(time_diff: i64) {
+        unsafe {
+            TIME_DIFF = time_diff;
+        }
+    }
 }
 
 impl log::Log for Log {
@@ -263,6 +272,10 @@ impl log::Log for Log {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let now = chrono::Local::now().naive_local();
+            let nsecs = now.timestamp_subsec_nanos();
+            let secs = now.timestamp();
+            let secs = unsafe { secs + TIME_DIFF };
+            let now = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
             self.sender
                 .send(Message::Msg(format!(
                     "[{} {}] {}{}",

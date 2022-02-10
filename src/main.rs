@@ -10,6 +10,7 @@ fn main() {
         true,
     )
     .unwrap();
+    Logger::set_time_diff(60 * 60);
     logger.start();
     log::info!("started");
     logger.flush();
